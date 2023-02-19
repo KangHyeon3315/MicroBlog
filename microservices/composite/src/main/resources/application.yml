@@ -1,0 +1,22 @@
+server:
+  port: 8000
+  error:
+    include-message: always
+
+app:
+  post:
+    host: localhost
+    port: 8001
+  comment:
+    host: localhost
+    port: 8002
+  user:
+    host: localhost
+    port: 8003
+
+logging:
+  level:
+    root: info
+    com:
+      microblog: debug
+
