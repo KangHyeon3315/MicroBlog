@@ -34,12 +34,13 @@ public class CompositeControllerImpl implements PostCompositeController {
             @Value("${app.post.host}") String postHost,
             @Value("${app.post.port}") String postPort,
             @Value("${app.comment.host}") String commentHost,
-            @Value("${app.comment.port}") String commentPort
+            @Value("${app.comment.port}") String commentPort,
+            RestTemplate restTemplate
     ) {
         POST_URL = String.format("http://%s:%s/post", postHost, postPort);
         COMMENT_URL = String.format("http://%s:%s/comment", commentHost, commentPort);
 
-        restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
         mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
     }

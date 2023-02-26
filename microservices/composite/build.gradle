@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.0.2'
 	id 'io.spring.dependency-management' version '1.1.0'
+
+	id "org.asciidoctor.jvm.convert" version "3.3.2" // Asciidoctor 플러그인 추가
 }
 
 group = 'com.microblog'
@@ -9,6 +11,8 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
 configurations {
+	asciidoctorExt // Asciidoctor를 확장하는 의존성에 대한 asciidoctorExt 구성을 선언
+
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
@@ -31,8 +35,41 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+
+	// 의존성 추가
+	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
-tasks.named('test') {
+ext {
+	set('snippetsDir', file("build/generated-snippets")) // 생성된 스니펫의 출력 위치
+}
+
+test {
+	outputs.dir snippetsDir // 스니펫 디렉터리를 출력으로 추가
 	useJUnitPlatform()
+}
+
+asciidoctor { // asciidoctor 작업을 구성
+	inputs.dir snippetsDir // 스니펫 디렉터리를 입력으로 설정
+	configurations 'asciidoctorExt' // asciidoctorExt 구성 사용을 구성
+	baseDirFollowsSourceDir() // .adoc 파일에서 다른 .adoc 파일을 포함하는 경우 경로를 동일한 경로로 설정
+	dependsOn test // 문서가 생성되기 전에 테스트가 실행되도록 설정
+}
+
+asciidoctor.doFirst {
+	delete file('src/main/resources/static/docs') // asciidoctor가 실행될 때 처음으로 해당 경로에 있는 파일 제거
+}
+
+task createDocument(type: Copy) { // 복사 타입의 createDocument Task 추가
+	dependsOn asciidoctor // createDocument Task가 실행되기 전에 asciidoctor Task가 먼저 수행하도록 설정
+	from file("build/docs/asciidoc")
+	into file("src/main/resources/static") // build/docs/asciidoc -> src/main/resources/static 복사
+}
+
+bootJar {
+	dependsOn createDocument // createDocument 이후 실행되도록 설정
+	from("${asciidoctor.outputDir}") { // asciidoctor.outputDir 폴더를 static/docs 폴더에 복사
+		into 'static/docs'
+	}
 }
