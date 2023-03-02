@@ -2,14 +2,13 @@ package com.microblog.composite.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.microblog.exception.ErrInfo;
 import composite.PostComposite;
 import composite.PostCompositeController;
 import core.comment.Comment;
 import core.post.Post;
-import com.microblog.exception.ErrInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -30,15 +29,9 @@ public class CompositeControllerImpl implements PostCompositeController {
     private final String POST_URL;
     private final String COMMENT_URL;
 
-    public CompositeControllerImpl(
-            @Value("${app.post.host}") String postHost,
-            @Value("${app.post.port}") String postPort,
-            @Value("${app.comment.host}") String commentHost,
-            @Value("${app.comment.port}") String commentPort,
-            RestTemplate restTemplate
-    ) {
-        POST_URL = String.format("http://%s:%s/post", postHost, postPort);
-        COMMENT_URL = String.format("http://%s:%s/comment", commentHost, commentPort);
+    public CompositeControllerImpl(RestTemplate restTemplate) {
+        POST_URL = "http://post-service/post";
+        COMMENT_URL = "http://comment-service/comment";
 
         this.restTemplate = restTemplate;
         mapper = new ObjectMapper();

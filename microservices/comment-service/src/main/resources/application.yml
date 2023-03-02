@@ -1,5 +1,7 @@
+
 server:
   port: 8002
+
   error:
     include-message: always
 
@@ -9,11 +11,25 @@ logging:
     com:
       microblog: debug
 
+spring:
+  application:
+    name: comment-service
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+
 ---
 spring:
   config:
     activate:
       on-profile: docker
 
+  cloud:
+    consul:
+      host: consul
+
 server:
   port: 8080
+
+

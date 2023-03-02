@@ -3,22 +3,19 @@ server:
   error:
     include-message: always
 
-app:
-  post:
-    host: localhost
-    port: 8001
-  comment:
-    host: localhost
-    port: 8002
-  user:
-    host: localhost
-    port: 8003
-
 logging:
   level:
     root: info
     com:
       microblog: debug
+
+spring:
+  application:
+    name: composite-service
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
 
 ---
 spring:
@@ -26,16 +23,10 @@ spring:
     activate:
       on-profile: docker
 
+  cloud:
+    consul:
+      host: consul
+
 server:
   port: 8080
 
-app:
-  post:
-    host: post
-    port: 8080
-  comment:
-    host: comment
-    port: 8080
-  user:
-    host: user
-    port: 8080
