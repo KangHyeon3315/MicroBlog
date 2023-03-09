@@ -6,6 +6,14 @@ services:
     ports:
       - "8500:8500"
 
+  gateway:
+    build: microservices/gateway-service
+    mem_limit: 350m
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
   post:
     build: microservices/post-service
     mem_limit: 350m
@@ -27,7 +35,5 @@ services:
   composite:
     build: microservices/composite
     mem_limit: 350m
-    ports:
-      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker

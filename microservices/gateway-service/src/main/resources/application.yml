@@ -1,0 +1,32 @@
+logging:
+  level:
+    root: INFO
+#    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: INFO
+#    org.springframework.cloud.gateway: TRACE
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+
+    gateway:
+      routes:
+        - id: composite
+          uri:
+            lb://composite-service
+
+          predicates:
+            - Path=/composite/**
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  cloud:
+    consul:
+      host: consul
