@@ -10,7 +10,8 @@ services:
     build: microservices/gateway-service
     mem_limit: 350m
     ports:
-      - "8080:8080"
+#      - "8080:8080"
+      - "443:443"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 

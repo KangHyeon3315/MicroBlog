@@ -4,6 +4,15 @@ logging:
 #    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: INFO
 #    org.springframework.cloud.gateway: TRACE
 
+server:
+  port: 443
+
+  ssl:
+    key-store: /Users/kh/Project/MicroBlog/microservices/gateway-service/keystore.p12
+    key-store-password: mypassword
+    key-store-type: PKCS12
+    key-alias: microblog
+
 spring:
   application:
     name: gateway-service
@@ -30,3 +39,9 @@ spring:
   cloud:
     consul:
       host: consul
+
+server:
+  port: 443
+
+  ssl:
+    key-store: /keystore.p12
