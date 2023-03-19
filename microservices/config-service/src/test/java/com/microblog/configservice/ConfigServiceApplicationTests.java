@@ -1,10 +1,10 @@
-package com.microblog.composite;
+package com.microblog.configservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class CompositeApplicationTests {
+class ConfigServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

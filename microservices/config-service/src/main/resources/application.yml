@@ -1,0 +1,45 @@
+server:
+  port: 8888
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/KangHyeon3315/MicroBlogConfig.git
+
+    consul:
+      host: localhost
+      port: 8500
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  cloud:
+    consul:
+      host: consul
+
+    config:
+      server:
+        git:
+          uri: https://github.com/KangHyeon3315/MicroBlogConfig.git
+
+server:
+  port: 8888

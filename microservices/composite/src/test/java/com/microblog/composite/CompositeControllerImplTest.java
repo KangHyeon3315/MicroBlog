@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.config.client.ConfigServicePropertySourceLocator;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CompositeControllerImplTest {
     @MockBean
     RestTemplate restTemplate;
+
+    @MockBean
+    private ConfigServicePropertySourceLocator configServicePropertySourceLocator;
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     MockMvc mockMvc;

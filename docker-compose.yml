@@ -6,6 +6,20 @@ services:
     ports:
       - "8500:8500"
 
+  config:
+    build: microservices/config-service
+    mem_limit: 350m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail http://config:8888/actuator || exit 1" ]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+
   gateway:
     build: microservices/gateway-service
     mem_limit: 350m
@@ -38,3 +52,7 @@ services:
     mem_limit: 350m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    restart: on-failure
+    depends_on:
+      config:
+        condition: service_healthy

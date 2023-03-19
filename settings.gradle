@@ -1,6 +1,7 @@
 include ':api'
 include ':util'
 
+include ':microservices:config-service'
 include ':microservices:gateway-service'
 include ':microservices:composite'
 include ':microservices:comment-service'
