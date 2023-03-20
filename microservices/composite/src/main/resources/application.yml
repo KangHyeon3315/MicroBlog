@@ -9,9 +9,6 @@ logging:
     com:
       microblog: debug
 
-app:
-  config-service: http://localhost:8888
-
 spring:
   application:
     name: composite-service
@@ -25,7 +22,7 @@ spring:
       port: 8500
 
     config:
-      uri: ${app.config-service}
+      uri: http://localhost:8888
       fail-fast: true
       retry:
         initial-interval: 3000
@@ -46,8 +43,8 @@ spring:
     consul:
       host: consul
 
-app:
-  config-service: http://config:8888
+    config:
+      uri: http://config:8888
 
 server:
   port: 8080
