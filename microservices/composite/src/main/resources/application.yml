@@ -16,36 +16,8 @@ spring:
   config:
     import: "optional:configserver:"
 
+
   cloud:
     consul:
       host: localhost
       port: 8500
-
-    config:
-      uri: http://localhost:8888
-      fail-fast: true
-      retry:
-        initial-interval: 3000
-        multiplier: 1.3
-        max-interval: 10000
-        max-attempts: 20
-      profile: dev
-
-
-
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-
-  cloud:
-    consul:
-      host: consul
-
-    config:
-      uri: http://config:8888
-
-server:
-  port: 8080
-
