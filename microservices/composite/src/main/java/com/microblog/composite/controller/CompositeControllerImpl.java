@@ -10,88 +10,108 @@ import core.post.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 public class CompositeControllerImpl implements PostCompositeController {
     private static final Logger LOG = LoggerFactory.getLogger(CompositeControllerImpl.class);
 
     private final ObjectMapper mapper;
-    private final RestTemplate restTemplate;
     private final String POST_URL;
     private final String COMMENT_URL;
 
     @Value("${my.property}")
     private String myProperty;
 
-    public CompositeControllerImpl(RestTemplate restTemplate) {
+    private final WebClient.Builder webclientBuilder;
+    private WebClient webclient;
+
+    public CompositeControllerImpl(WebClient.Builder webclientBuilder) {
         POST_URL = "http://post-service/post";
         COMMENT_URL = "http://comment-service/comment";
-
-        this.restTemplate = restTemplate;
+        this.webclientBuilder = webclientBuilder;
+        this.webclient = null;
         mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
     }
 
-    @Override
-    public PostComposite getPost(int postId) throws Exception {
-        try {
-            Post post = getPostFromPostService(postId);
-            List<Comment> comments = getCommentFromCommentService(postId);
-
-            return new PostComposite(postId, post.getTitle(), post.getAuthor(), post.getContents() + " " + myProperty, comments);
-        } catch (HttpClientErrorException ex) {
-            HttpStatusCode statusCode = ex.getStatusCode();
-            if (HttpStatus.NOT_FOUND.equals(statusCode)) {
-                throw new IllegalAccessException(getErrorMessage(ex));
-            } else if (HttpStatus.BAD_REQUEST.equals(statusCode)) {
-                throw new IllegalArgumentException(getErrorMessage(ex));
-            }
-            LOG.warn("Unexpected error: {}", ex.getStatusCode());
-            LOG.warn("Error: {}", ex.getResponseBodyAsString());
-            throw ex;
+    /**
+     * Test에서 Mock을 주입하기 위해 사용
+     */
+    private WebClient getWebclient() {
+        if (webclient == null) {
+            webclient = webclientBuilder.build();
         }
-
+        return webclient;
     }
 
-    // 추가 (다른 마이크로서비스에서 발생한 예외를 ErrInfo에 매핑해서 메시지를 가져오는 기능 구현)
-    private String getErrorMessage(HttpClientErrorException ex) {
+    @Override
+    public Mono<PostComposite> getPost(int postId) {
+        Mono<Post> post = getPostFromPostService(postId);
+        Flux<Comment> comments = getCommentFromCommentService(postId);
+
+        return Mono.zip(post, comments.collectList())
+                .map(tuple -> new PostComposite(
+                        postId,
+                        tuple.getT1().getTitle(),
+                        tuple.getT1().getAuthor(),
+                        tuple.getT1().getContents() + " " + myProperty,
+                        tuple.getT2()
+                ));
+    }
+
+    private Mono<Post> getPostFromPostService(int postId) {
+        String url = String.format("%s/%d", POST_URL, postId);
+        LOG.debug("POST URL : {}", url);
+
+        return getWebclient()
+                .get()
+                .uri(url).retrieve()
+                .bodyToMono(Post.class).log()
+                .onErrorMap(WebClientResponseException.class, this::handleException);
+    }
+
+    public Flux<Comment> getCommentFromCommentService(int postId) {
+        String url = String.format("%s/%d", COMMENT_URL, postId);
+
+        LOG.debug("COMMENT URL : {}", url);
+
+        return getWebclient()
+                .get()
+                .uri(url).retrieve()
+                .bodyToFlux(Comment.class);
+    }
+
+    private Throwable handleException(Throwable ex) {
+
+        if (!(ex instanceof WebClientResponseException resEx)) {
+            LOG.warn("Unexpected Exception: {}", ex.toString());
+            return ex;
+        }
+
+        HttpStatusCode statusCode = resEx.getStatusCode();
+        if (HttpStatus.BAD_REQUEST.equals(statusCode)) {
+            return new IllegalArgumentException(getErrorMessage(resEx));
+        } else if (HttpStatus.NOT_FOUND.equals(statusCode)) {
+            return new IllegalAccessException(getErrorMessage(resEx));
+        }
+        LOG.warn("Unexpected Exception: {}", ex.toString());
+        return ex;
+    }
+
+    private String getErrorMessage(WebClientResponseException ex) {
         try {
             return mapper.readValue(ex.getResponseBodyAsString(), ErrInfo.class).getMessage();
         } catch (IOException ioex) {
             return ex.getMessage();
         }
-    }
-
-    private Post getPostFromPostService(int postId) throws IllegalAccessException {
-        String url = String.format("%s/%d", POST_URL, postId);
-        LOG.debug("POST URL : {}", url);
-
-        Post post = restTemplate.getForObject(url, Post.class);
-        if (post == null) {
-            throw new IllegalAccessException("해당 Post를 찾을 수 없습니다.");
-        }
-
-        LOG.debug("Post 반환 - postId: {}", post.getPostId());
-
-        return post;
-    }
-
-    public List<Comment> getCommentFromCommentService(int postId) {
-        String url = String.format("%s/%d", COMMENT_URL, postId);
-
-        LOG.debug("COMMENT URL : {}", url);
-
-        return restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Comment>>() {
-        }).getBody();
     }
 }
